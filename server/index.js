@@ -1,11 +1,15 @@
+// server.js
 const express = require('express');
-const db = require('./config/db'); // Import database connection
-const router = require('./routes/index'); // Import router
+const createConnection = require('./config/db'); // Import database connection function
 
 const app = express();
 const port = 3000;
 
-app.use('/', router); // Use the imported router for routes
+// Connect to the database
+const db = createConnection();
+
+// Optionally attach db to app locals for later use in routes
+app.locals.db = db;
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
