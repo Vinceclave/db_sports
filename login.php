@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $stmt->bind_param("s", $username);
                 $stmt->execute();
                 $stmt->store_result();
-                $stmt->bind_result($user_id, $hashed_password);
+                $stmt->bind_result($user_id, $hashed_password, $role);
 
                 if ($stmt->fetch() && password_verify($password, $hashed_password)) {
                     $_SESSION['user_id'] = $user_id;

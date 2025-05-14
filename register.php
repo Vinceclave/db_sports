@@ -13,6 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['password'])) {
  $message = "Please fill in all fields.";
     } else {
+        // Sanitize input
         $username = trim($_POST['username']);
         $email = trim($_POST['email']);
         $password = $_POST['password'];
@@ -21,37 +22,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
 
-    // Get database connection
+        // Get database connection
+        $conn = get_db_connection();
 
-    $conn = get_db_connection();
-
-    // Check if username or email already exists
-    $check_stmt = $conn->prepare("SELECT user_id FROM Users WHERE username = ? OR email = ?");
-    $check_stmt->bind_param("ss", $username, $email);
-    $check_stmt->execute();
-    $check_stmt->store_result();
-
-    if ($check_stmt->num_rows > 0) {
-        $message = "Username or email already exists.";
-    } else {
-        // Insert new user into the database
-        $stmt = $conn->prepare("INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)");
-        if ($stmt === false) {
-            $message = "Database error: Unable to prepare statement.";
+        // Check for database connection error
+        if ($conn->connect_error) {
+            $message = "Database connection failed: " . $conn->connect_error;
         } else {
-            $stmt->bind_param("sss", $username, $email, $password_hash);
-
-            if ($stmt->execute()) {
-                // Registration successful, redirect to login page
-                header("Location: login.php");
-                exit();
+            // Check if username or email already exists
+            $check_stmt = $conn->prepare("SELECT user_id FROM Users WHERE username = ? OR email = ?");
+            if ($check_stmt === false) {
+                $message = "Database error: Unable to prepare check statement: " . $conn->error;
             } else {
-                $message = "Error: " . $stmt->error;
+                $check_stmt->bind_param("ss", $username, $email);
+                $check_stmt->execute();
+                $check_stmt->store_result();
+
+                if ($check_stmt->num_rows > 0) {
+                    $message = "Username or email already exists.";
+                } else {
+                    $role = 'user'; // Set default role
+                    // Insert new user into the database
+                    $stmt = $conn->prepare("INSERT INTO Users (username, email, password_hash, role) VALUES (?, ?, ?, ?)");
+                    if ($stmt === false) {
+                        $message = "Database error: Unable to prepare insert statement: " . $conn->error;
+                    } else {
+                        $stmt->bind_param("ssss", $username, $email, $password_hash, $role);
+
+                        if ($stmt->execute()) {
+                            // Registration successful, redirect to login page
+                            header("Location: login.php");
+                            exit();
+                        } else {
+                            $message = "Error: " . $stmt->error;
+                        }
+                    }
+                }
+                $check_stmt->close();
             }
+            $conn->close();
         }
     }
-    $check_stmt->close();
-    $conn->close();
+}
 }
 ?>
 
