@@ -1,10 +1,10 @@
-const { Sport } = require('../models');
+const sportModel = require('../models/sportModel');
 
 const sportController = {
   // Get all sports
   getAllSports: async (req, res) => {
     try {
-      const sports = await Sport.findAll();
+      const sports = await sportModel.getAllSports();
       res.status(200).json(sports);
     } catch (err) {
       res.status(500).json({ message: err.message });
@@ -14,7 +14,7 @@ const sportController = {
   // Get a single sport by ID
   getSportById: async (req, res) => {
     try {
-      const sport = await Sport.findByPk(req.params.id);
+      const sport = await sportModel.getSportById(req.params.id);
       if (!sport) {
         res.status(404).json({ message: 'Sport not found' });
         return;
@@ -28,7 +28,7 @@ const sportController = {
   // Create a new sport
   createSport: async (req, res) => {
     try {
-      const sport = await Sport.create(req.body);
+      const sport = await sportModel.createSport(req.body);
       res.status(201).json(sport);
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -38,14 +38,11 @@ const sportController = {
   // Update a sport by ID
   updateSport: async (req, res) => {
     try {
-      const [updatedRows] = await Sport.update(req.body, {
-        where: { sport_id: req.params.id }
-      });
-      if (updatedRows === 0) {
+      const updatedSport = await sportModel.updateSport(req.params.id, req.body);
+      if (!updatedSport) {
         res.status(404).json({ message: 'Sport not found or no changes made' });
         return;
       }
-      const updatedSport = await Sport.findByPk(req.params.id);
       res.status(200).json(updatedSport);
     } catch (err) {
       res.status(400).json({ message: err.message });
@@ -55,10 +52,8 @@ const sportController = {
   // Delete a sport by ID
   deleteSport: async (req, res) => {
     try {
-      const deletedRows = await Sport.destroy({
-        where: { sport_id: req.params.id }
-      });
-      if (deletedRows === 0) {
+      const deleted = await sportModel.deleteSport(req.params.id);
+      if (!deleted) {
         res.status(404).json({ message: 'Sport not found' });
         return;
       }

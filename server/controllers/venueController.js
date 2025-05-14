@@ -1,11 +1,15 @@
 const {
-  Venue
-} = require('../models');
+  getAllVenues,
+  getVenueById,
+  createVenue,
+  updateVenue,
+  deleteVenue
+} = require('../models/venueModel');
 
 const venueController = {
   getAllVenues: async (req, res) => {
     try {
-      const venues = await Venue.findAll();
+      const venues = await getAllVenues();
       res.status(200).json(venues);
     } catch (err) {
       res.status(500).json({
@@ -17,8 +21,8 @@ const venueController = {
 
   getVenueById: async (req, res) => {
     try {
-      const venue = await Venue.findByPk(req.params.id);
-      if (!venue) {
+      const venue = await getVenueById(req.params.id);
+      if (venue.length === 0) {
         res.status(404).json({
           message: 'Venue not found'
         });
@@ -35,7 +39,7 @@ const venueController = {
 
   createVenue: async (req, res) => {
     try {
-      const newVenue = await Venue.create(req.body);
+      const newVenue = await createVenue(req.body);
       res.status(201).json(newVenue);
     } catch (err) {
       res.status(400).json({
@@ -47,18 +51,13 @@ const venueController = {
 
   updateVenue: async (req, res) => {
     try {
-      const [updatedRows] = await Venue.update(req.body, {
-        where: {
-          venue_id: req.params.id
-        },
-      });
-      if (updatedRows === 0) {
+      const updatedVenue = await updateVenue(req.params.id, req.body);
+      if (!updatedVenue) {
         res.status(404).json({
-          message: 'Venue not found or no changes made'
+          message: 'Venue not found'
         });
         return;
       }
-      const updatedVenue = await Venue.findByPk(req.params.id);
       res.status(200).json(updatedVenue);
     } catch (err) {
       res.status(400).json({
@@ -70,12 +69,8 @@ const venueController = {
 
   deleteVenue: async (req, res) => {
     try {
-      const deletedRows = await Venue.destroy({
-        where: {
-          venue_id: req.params.id
-        },
-      });
-      if (deletedRows === 0) {
+      const success = await deleteVenue(req.params.id);
+      if (!success) {
         res.status(404).json({
           message: 'Venue not found'
         });

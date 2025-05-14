@@ -1,16 +1,13 @@
-module.exports = {
-  development: {
-    host: 'localhost',
-    username: 'root',
-    password: '',
-    database: 'db_sports',
-    dialect: 'mysql'
-  },
-  // You can add configurations for other environments (e.g., test, production) here
-  // test: {
-  //   // ...
-  // },
-  // production: {
-  //   // ...
-  // }
-};
+const mysql = require('mysql2/promise');
+
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'db_sports',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
+module.exports = pool;

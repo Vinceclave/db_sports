@@ -1,21 +1,19 @@
-const {
-  Ticket
-} = require('../models');
+const ticketModel = require('../models/ticketModel');
 
 const ticketController = {
   getAllTickets: async (req, res) => {
     try {
-      const tickets = await Ticket.findAll();
+      const tickets = await ticketModel.getAllTickets();
       res.status(200).json(tickets);
     } catch (err) {
-      res.status(500).json(err);
+      res.status(500).json({ message: err.message });
     }
   },
 
   getTicketById: async (req, res) => {
     try {
-      const ticket = await Ticket.findByPk(req.params.id);
-      if (!ticket) {
+      const ticket = await ticketModel.getTicketById(req.params.id);
+      if (!ticket || ticket.length === 0) {
         res.status(404).json({
           message: 'No ticket found with this id!'
         });
@@ -29,27 +27,21 @@ const ticketController = {
 
   createTicket: async (req, res) => {
     try {
-      const newTicket = await Ticket.create(req.body);
-      res.status(200).json(newTicket);
-    } catch (err) {
+      const newTicketId = await ticketModel.createTicket(req.body);
+      res.status(201).json({ ticket_id: newTicketId, ...req.body });
+    } catch (err) { // Consider more specific error handling for validation
       res.status(400).json(err);
     }
   },
 
   updateTicket: async (req, res) => {
     try {
-      const updatedTicket = await Ticket.update(req.body, {
-        where: {
-          ticket_id: req.params.id
-        },
-      });
-      if (!updatedTicket[0]) {
-        res.status(404).json({
-          message: 'No ticket found with this id!'
-        });
+      const success = await ticketModel.updateTicket(req.params.id, req.body);
+      if (!success) {
+        res.status(404).json({ message: 'No ticket found with this id!' });
         return;
       }
-      res.status(200).json(updatedTicket);
+      res.status(200).json({ message: 'Ticket updated successfully' });
     } catch (err) {
       res.status(500).json(err);
     }
@@ -57,18 +49,13 @@ const ticketController = {
 
   deleteTicket: async (req, res) => {
     try {
-      const deletedTicket = await Ticket.destroy({
-        where: {
-          ticket_id: req.params.id
-        },
-      });
-      if (!deletedTicket) {
+      const deletedRows = await ticketModel.deleteTicket(req.params.id);
+      if (deletedRows === 0) {
         res.status(404).json({
           message: 'No ticket found with this id!'
         });
-        return;
       }
-      res.status(200).json(deletedTicket);
+      res.status(200).json({ message: 'Ticket deleted successfully' });
     } catch (err) {
       res.status(500).json(err);
     }

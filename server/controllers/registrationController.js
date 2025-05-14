@@ -1,10 +1,9 @@
-const db = require('../models');
-const Registration = db.Registration;
+const registrationModel = require('../models/registrationModel');
 
 // Get all registrations
 exports.getAllRegistrations = async (req, res) => {
   try {
-    const registrations = await Registration.findAll();
+    const registrations = await registrationModel.getAllRegistrations();
     res.status(200).json(registrations);
   } catch (error) {
     res.status(500).json({
@@ -18,7 +17,7 @@ exports.getRegistrationById = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const registration = await Registration.findByPk(id);
+    const registration = await registrationModel.getRegistrationById(id);
     if (registration) {
       res.status(200).json(registration);
     } else {
@@ -52,7 +51,7 @@ exports.createRegistration = async (req, res) => {
 
   // Save Registration in the database
   try {
-    const data = await Registration.create(registration);
+    const data = await registrationModel.createRegistration(registration);
     res.status(201).json(data);
   } catch (error) {
     res.status(500).json({
@@ -66,12 +65,7 @@ exports.updateRegistration = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [num] = await Registration.update(req.body, {
-      where: {
-        registration_id: id
-      }
-    });
-
+    const num = await registrationModel.updateRegistration(id, req.body);
     if (num === 1) {
       res.status(200).json({
         message: 'Registration was updated successfully.'
@@ -93,11 +87,7 @@ exports.deleteRegistration = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const num = await Registration.destroy({
-      where: {
-        registration_id: id
-      }
-    });
+    const num = await registrationModel.deleteRegistration(id);
 
     if (num === 1) {
       res.status(200).json({

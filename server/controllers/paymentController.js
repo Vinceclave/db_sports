@@ -1,10 +1,9 @@
-const db = require('../models');
-const Payment = db.Payment;
+const PaymentModel = require('../models/paymentModel'); // Assuming your new model file is named paymentModel.js
 
 // Get all payments
 exports.getAllPayments = async (req, res) => {
   try {
-    const payments = await Payment.findAll();
+    const payments = await PaymentModel.getAllPayments();
     res.status(200).json(payments);
   } catch (err) {
     res.status(500).json({
@@ -18,7 +17,7 @@ exports.getPaymentById = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const payment = await Payment.findByPk(id);
+    const payment = await PaymentModel.getPaymentById(id);
     if (payment) {
       res.status(200).json(payment);
     } else {
@@ -51,8 +50,7 @@ exports.createPayment = async (req, res) => {
   };
 
   try {
-    const data = await Payment.create(payment);
-    res.status(201).json(data);
+    const result = await PaymentModel.createPayment(payment);
   } catch (err) {
     res.status(500).json({
       message: err.message || 'Some error occurred while creating the Payment.'
@@ -65,11 +63,7 @@ exports.updatePayment = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const num = await Payment.update(req.body, {
-      where: {
-        payment_id: id
-      }
-    });
+    const num = await PaymentModel.updatePayment(id, req.body);
 
     if (num == 1) {
       res.status(200).json({
@@ -92,11 +86,7 @@ exports.deletePayment = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const num = await Payment.destroy({
-      where: {
-        payment_id: id
-      }
-    });
+    const num = await PaymentModel.deletePayment(id);
 
     if (num == 1) {
       res.status(200).json({

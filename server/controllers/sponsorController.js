@@ -1,10 +1,9 @@
-const db = require('../models');
-const Sponsor = db.Sponsors;
+const sponsorModel = require('../models/sponsorModel');
 
 // Get all sponsors
 exports.getAllSponsors = async (req, res) => {
   try {
-    const sponsors = await Sponsor.findAll();
+    const sponsors = await sponsorModel.getAllSponsors();
     res.status(200).json(sponsors);
   } catch (error) {
     res.status(500).json({
@@ -18,7 +17,7 @@ exports.getSponsorById = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const sponsor = await Sponsor.findByPk(id);
+    const sponsor = await sponsorModel.getSponsorById(id);
     if (sponsor) {
       res.status(200).json(sponsor);
     } else {
@@ -51,7 +50,7 @@ exports.createSponsor = async (req, res) => {
   };
 
   try {
-    const data = await Sponsor.create(sponsor);
+    const data = await sponsorModel.createSponsor(sponsor);
     res.status(201).json(data);
   } catch (error) {
     res.status(500).json({
@@ -65,11 +64,7 @@ exports.updateSponsor = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const [num] = await Sponsor.update(req.body, {
-      where: {
-        sponsor_id: id
-      },
-    });
+    const num = await sponsorModel.updateSponsor(id, req.body);
 
     if (num == 1) {
       res.status(200).json({
@@ -92,11 +87,7 @@ exports.deleteSponsor = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const num = await Sponsor.destroy({
-      where: {
-        sponsor_id: id
-      },
-    });
+    const num = await sponsorModel.deleteSponsor(id);
 
     if (num == 1) {
       res.status(200).json({

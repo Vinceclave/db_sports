@@ -1,11 +1,10 @@
-const db = require('../models');
-const Team = db.Team;
+const teamModel = require('../models/teamModel');
 
 // Get all teams
 exports.getAllTeams = async (req, res) => {
   try {
-    const teams = await Team.findAll();
-    res.status(200).json(teams);
+    const teams = await teamModel.getAllTeams();
+    res.json(teams);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -14,9 +13,9 @@ exports.getAllTeams = async (req, res) => {
 // Get a single team by ID
 exports.getTeamById = async (req, res) => {
   try {
-    const team = await Team.findByPk(req.params.id);
+    const team = await teamModel.getTeamById(req.params.id);
     if (team) {
-      res.status(200).json(team);
+      res.json(team);
     } else {
       res.status(404).json({ message: 'Team not found' });
     }
@@ -28,8 +27,8 @@ exports.getTeamById = async (req, res) => {
 // Create a new team
 exports.createTeam = async (req, res) => {
   try {
-    const team = await Team.create(req.body);
-    res.status(201).json(team);
+    const result = await teamModel.createTeam(req.body);
+    res.status(201).json({ team_id: result.insertId, ...req.body });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -38,12 +37,9 @@ exports.createTeam = async (req, res) => {
 // Update a team by ID
 exports.updateTeam = async (req, res) => {
   try {
-    const [updated] = await Team.update(req.body, {
-      where: { team_id: req.params.id }
-    });
+    const updated = await teamModel.updateTeam(req.params.id, req.body);
     if (updated) {
-      const updatedTeam = await Team.findByPk(req.params.id);
-      res.status(200).json(updatedTeam);
+      res.json({ message: 'Team updated successfully' });
     } else {
       res.status(404).json({ message: 'Team not found' });
     }
@@ -55,9 +51,7 @@ exports.updateTeam = async (req, res) => {
 // Delete a team by ID
 exports.deleteTeam = async (req, res) => {
   try {
-    const deleted = await Team.destroy({
-      where: { team_id: req.params.id }
-    });
+    const deleted = await teamModel.deleteTeam(req.params.id);
     if (deleted) {
       res.status(204).send();
     } else {

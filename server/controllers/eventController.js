@@ -1,18 +1,8 @@
-const {
-  Event,
-  Venue,
-  Sport
-} = require('../models'); // Assuming models are in ../models
+const eventModel = require('../models/eventModel');
 
 const getAllEvents = async (req, res) => {
   try {
-    const events = await Event.findAll({
-      include: [{
-        model: Venue
-      }, {
-        model: Sport
-      }]
-    });
+    const events = await eventModel.getAllEvents();
     res.status(200).json(events);
   } catch (error) {
     res.status(500).json({
@@ -23,13 +13,7 @@ const getAllEvents = async (req, res) => {
 
 const getEventById = async (req, res) => {
   try {
-    const event = await Event.findByPk(req.params.id, {
-      include: [{
-        model: Venue
-      }, {
-        model: Sport
-      }]
-    });
+    const event = await eventModel.getEventById(req.params.id);
     if (event) {
       res.status(200).json(event);
     } else {
@@ -46,7 +30,7 @@ const getEventById = async (req, res) => {
 
 const createEvent = async (req, res) => {
   try {
-    const event = await Event.create(req.body);
+    const event = await eventModel.createEvent(req.body);
     res.status(201).json(event);
   } catch (error) {
     res.status(400).json({
@@ -57,13 +41,10 @@ const createEvent = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   try {
-    const [updated] = await Event.update(req.body, {
-      where: {
-        event_id: req.params.id
-      }
-    });
+    const updated = await eventModel.updateEvent(req.params.id, req.body);    
     if (updated) {
-      const updatedEvent = await Event.findByPk(req.params.id);
+      // Assuming updateEvent model function returns the updated event or its ID
+      const updatedEvent = await eventModel.getEventById(req.params.id); 
       res.status(200).json(updatedEvent);
     } else {
       res.status(404).json({
@@ -79,11 +60,7 @@ const updateEvent = async (req, res) => {
 
 const deleteEvent = async (req, res) => {
   try {
-    const deleted = await Event.destroy({
-      where: {
-        event_id: req.params.id
-      }
-    });
+    const deleted = await eventModel.deleteEvent(req.params.id);
     if (deleted) {
       res.status(204).send();
     } else {
