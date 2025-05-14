@@ -3,6 +3,10 @@ php
 
 require_once 'config.php';
 
+// Temporarily enable error reporting for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 // Redirect if user is already logged in
