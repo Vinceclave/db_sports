@@ -1,115 +1,128 @@
+php
 <?php
-
-require_once 'config.php';
-require_once 'includes/footer.php'; // Assuming you still want the footer
-
 session_start();
-
-// Check if the user is already logged in
-if (isset($_SESSION['user_id'])) {
-    // Redirect to a dashboard or user area if logged in
-    header('Location: index.php'); // Or wherever your user dashboard is
-    exit;
-}
+require_once 'config.php';
 
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get form data
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? ''; // Password should not be trimmed
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-    // Validate input
-    if (empty($username) || empty($password)) {
-        $error = "Please enter both username and password.";
+    $conn = get_db_connection();
+    $stmt = $conn->prepare("SELECT user_id, password FROM Users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
+    $stmt->bind_result($user_id, $hashed_password);
+
+    if ($stmt->fetch() && password_verify($password, $hashed_password)) {
+        $_SESSION['user_id'] = $user_id;
+        header('Location: index.php');
+        exit;
     } else {
-        // Create database connection
-        $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-
-        // Check connection
-        if (!$conn) {
-            $error = "Database connection failed: " . mysqli_connect_error();
-        } else {
-            // Prepare a SELECT statement to retrieve the user and their hashed password
-            $sql = "SELECT user_id, username, password_hash FROM Users WHERE username = ?";
-            $stmt = mysqli_prepare($conn, $sql);
-
-            if ($stmt) {
-                // Bind the username parameter
-                mysqli_stmt_bind_param($stmt, "s", $username);
-
-                // Execute the statement
-                mysqli_stmt_execute($stmt);
-
-                // Get the result
-                $result = mysqli_stmt_get_result($stmt);
-
-                // Check if a user with that username exists
-                if (mysqli_num_rows($result) === 1) {
-                    $user = mysqli_fetch_assoc($result);
-
-                    // Verify the password
-                    if (password_verify($password, $user['password_hash'])) {
-                        // Password is correct, start the session
-                        $_SESSION['user_id'] = $user['user_id'];
-                        $_SESSION['username'] = $user['username'];
-
-                        // Redirect to a protected page (e.g., dashboard)
-                        header('Location: index.php'); // Or wherever your user dashboard is
-                        exit;
-                    } else {
-                        // Incorrect password
-                        $error = "Invalid username or password.";
-                    }
-                } else {
-                    // User not found
-                    $error = "Invalid username or password.";
-                }
-
-                // Close the statement
-                mysqli_stmt_close($stmt);
-            } else {
-                $error = "Database query error: " . mysqli_error($conn);
-            }
-
-            // Close the database connection
-            mysqli_close($conn);
-        }
+        $error = 'Invalid username or password.';
     }
+
+    $stmt->close();
+    $conn->close();
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="style.css"> <!-- Assuming you have a style.css file -->
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        .login-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+        .register-link {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .register-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-
-    <h2>Login</h2>
-
-    <?php if ($error): ?>
-        <p style="color: red;"><?php echo $error; ?></p>
-    <?php endif; ?>
-
-    <form action="login.php" method="post">
-        <div>
-            <label for="username">Username:</label><br>
-            <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($username ?? ''); ?>" required>
-        </div>
-        <div>
-            <label for="password">Password:</label><br>
-            <input type="password" id="password" name="password" required>
-        </div>
-        <div>
+    <div class="login-container">
+        <h2>Login</h2>
+        <?php if ($error): ?>
+            <p class="error"><?php echo $error; ?></p>
+        <?php endif; ?>
+        <form action="login.php" method="POST">
+            <div class="input-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
             <button type="submit">Login</button>
-        </div>
-        <p>Don't have an account? <a href="register.php">Register here</a>.</p>
-    </form>
-
+        </form>
+        <p class="register-link">Don't have an account? <a href="register.php">Register here</a>.</p>
+    </div>
 </body>
 </html>

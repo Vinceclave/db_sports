@@ -1,85 +1,131 @@
+php
 <?php
-require_once 'config.php'; // Keep config.php inclusion
+require_once 'config.php';
 
-$error_message = '';
+$message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
+    $username = $_POST['username'];
+    $email = $_POST['email'];
+    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
 
-    // Input Validation
-    if (empty($username) || empty($email) || empty($password)) {
-        $error_message = "All fields are required.";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error_message = "Invalid email format.";
-    } else {
-        // Create a database connection
-        $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+    $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
-        // Check connection
-        if (!$conn) {
-            die("Connection failed: " . mysqli_connect_error());
-        }
-
-        // Check if username or email already exists
-        $check_sql = "SELECT user_id FROM Users WHERE username = ? OR email = ?";
-        $check_stmt = mysqli_prepare($conn, $check_sql);
-        mysqli_stmt_bind_param($check_stmt, "ss", $username, $email);
-        mysqli_stmt_execute($check_stmt);
-        mysqli_stmt_store_result($check_stmt);
-
-        if (mysqli_stmt_num_rows($check_stmt) > 0) {
-            $error_message = "Username or email already exists.";
-        } else {
-            // Hash the password
-            $password_hash = password_hash($password, PASSWORD_DEFAULT);
-
-            // Insert the new user into the database using prepared statements
-            $insert_sql = "INSERT INTO Users (username, password_hash, email) VALUES (?, ?, ?)";
-            $insert_stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($insert_stmt, "sss", $username, $password_hash, $email);
-
-            if (mysqli_stmt_execute($insert_stmt)) {
-                // Redirect to login page on successful registration
-                header("Location: index.php"); // Assuming index.php is your login page
-                exit();
-            } else {
-                $error_message = "Error during registration: " . mysqli_error($conn);
-            }
-
-            mysqli_stmt_close($insert_stmt);
-        }
-
-        mysqli_stmt_close($check_stmt);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
     }
+
+    // Check if username or email already exists
+    $check_stmt = $conn->prepare("SELECT user_id FROM Users WHERE username = ? OR email = ?");
+    $check_stmt->bind_param("ss", $username, $email);
+    $check_stmt->execute();
+    $check_stmt->store_result();
+
+    if ($check_stmt->num_rows > 0) {
+        $message = "Username or email already exists.";
+    } else {
+        $stmt = $conn->prepare("INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $username, $email, $password);
+
+        if ($stmt->execute()) {
+            $message = "Registration successful! You can now <a href='login.php'>login</a>.";
+        } else {
+            $message = "Error: " . $stmt->error;
+        }
+        $stmt->close();
+    }
+    $check_stmt->close();
+    $conn->close();
 }
-include 'includes/header.php';
-
-<main class="container mx-auto mt-8">
-    <h2 class="text-2xl font-bold mb-4">User Registration</h2>
-    <form action="" method="post" class="max-w-md mx-auto bg-white p-6 rounded-md shadow-md">
-        <div class="mb-4">
-            <?php if ($error_message): ?>
-                <p class="text-red-500 text-xs italic mb-4"><?php echo $error_message; ?></p>
-            <?php endif; ?>
-        </div>
-        <div class="mb-4">
-            <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
-            <input type="text" name="username" id="username" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-        </div>
-        <div class="mb-4">
-            <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
-            <input type="email" name="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-        </div>
-        <div class="mb-4">
-            <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
-            <input type="password" name="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-        </div>
-        <div class="flex items-center justify-between">
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Register</button>
-        </div>
-    </form>
-</main>
-
 ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        .register-container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .register-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding and border in element's total width */
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .message {
+            margin-top: 20px;
+            color: #d9534f;
+        }
+        .message a {
+            color: #5cb85c;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register</h2>
+        <form method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <?php if ($message): ?>
+            <p class="message"><?php echo $message; ?></p>
+        <?php endif; ?>
+    </div>
+</body>
+</html>
