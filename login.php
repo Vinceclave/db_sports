@@ -9,8 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $conn = get_db_connection();
-    $stmt = $conn->prepare("SELECT user_id, password FROM Users WHERE username = ?");
+    $conn = get_db_connection();    $stmt = $conn->prepare("SELECT user_id, password FROM Users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
     $stmt->store_result();
