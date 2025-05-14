@@ -4,24 +4,20 @@ include 'includes/header.php';
 ?>
 
 <main>
-    <h1 class="text-3xl font-bold mb-6">User Dashboard</h1>
+ <nav class="mb-6">
+ <ul class="flex space-x-4">
+ <li><a href="/user/events" class="text-blue-500 hover:underline">View Events</a></li>
+ <li><a href="/user/registrations" class="text-blue-500 hover:underline">My Registrations</a></li>
+ <li><a href="/user/tickets" class="text-blue-500 hover:underline">My Tickets</a></li>
+ </ul>
+ </nav>
 
-    <section>
-        <h2 class="text-2xl font-semibold mb-4">My Registered Events</h2>
-        <!-- Placeholder for displaying user's registered events -->
-        <p>Event list will appear here.</p>
-    </section>
+    <h1 class="text-3xl font-bold mb-6">User Section</h1>
 
-    <section class="mt-8">
-        <h2 class="text-2xl font-semibold mb-4">My Teams</h2>
-        <!-- Placeholder for displaying user's teams -->
-        <p>Team list will appear here.</p>
-    </section>
-
-    <!-- Add more user-specific sections as needed -->
+    <!-- Content for the specific user route will be loaded here -->
+    <!-- This file serves as the layout, actual content will be in separate files -->
 
 </main>
-
 <?php
 include 'includes/footer.php';
 ?>
