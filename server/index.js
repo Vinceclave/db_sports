@@ -1,5 +1,6 @@
 const express = require('express');
 const dbPool = require('./config/config');
+const userModel = require('./models/userModel'); // Import userModel
 
 // Import route files
 const userRoutes = require('./routes/userRoutes');
@@ -41,6 +42,9 @@ async function startServer() {
     const connection = await dbPool.getConnection();
     console.log('Database connected successfully.');
     connection.release();
+
+    // On server start, ensure at least one admin exists
+    userModel.createDefaultAdmin();
 
     app.listen(port, () => {
       console.log(`Server running on port ${port}`);
