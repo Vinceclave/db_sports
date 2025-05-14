@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($conn->connect_error) {
             $error = "Database connection failed: " . $conn->connect_error;
         } else {
-            $stmt = $conn->prepare("SELECT user_id, password_hash FROM Users WHERE username = ?");
+            $stmt = $conn->prepare("SELECT user_id, password_hash, role FROM Users WHERE username = ?");
             if ($stmt === false) {
                  $error = 'Database query error: ' . $conn->error;
             } else {
