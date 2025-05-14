@@ -2,6 +2,11 @@ php
 <?php
 require_once 'config.php';
 
+// Ensure config.php defines the necessary constants
+if (!defined('DB_HOST') || !defined('DB_USERNAME') || !defined('DB_PASSWORD') || !defined('DB_NAME')) {
+    die("Configuration error: Database constants are not defined in config.php");
+}
+
 $message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -9,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
 
-    $conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+    $conn = new mysqli(DB_HOST, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
