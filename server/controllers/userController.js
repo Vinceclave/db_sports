@@ -1,7 +1,7 @@
+const bcrypt = require('bcrypt');
 const userModel = require('../models/userModel');
 
 const userController = {
-  // Get all users
   getAllUsers: async (req, res) => {
     try {
       const users = await userModel.getAllUsers();
@@ -10,10 +10,10 @@ const userController = {
       res.status(500).json({ message: err.message });
     }
   },
- 
-  // Get a single user by ID
+
   getUserById: async (req, res) => {
-    try {      const user = await userModel.getUserById(req.params.id);      
+    try {
+      const user = await userModel.getUserById(req.params.id);
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -23,30 +23,47 @@ const userController = {
     }
   },
 
-  // Create a new user
   createUser: async (req, res) => {
-    try {      const newUser = await userModel.createUser(req.body);
-      res.status(201).json(newUser);
+    try {
+      const { username, password, email } = req.body;
+
+      if (!username || !password || !email) {
+        return res.status(400).json({ message: 'Username, password, and email are required' });
+      }
+
+      const password_hash = await bcrypt.hash(password, 10);
+      const newUser = await userModel.createUser({ username, password_hash, email });
+
+      res.status(201).json({ message: 'User created successfully', user: newUser });
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
   },
 
-  // Update a user by ID
   updateUser: async (req, res) => {
-    try { const success = await userModel.updateUser(req.params.id, req.body);
+    try {
+      const { username, password, email } = req.body;
+
+      if (!username || !password || !email) {
+        return res.status(400).json({ message: 'Username, password, and email are required' });
+      }
+
+      const password_hash = await bcrypt.hash(password, 10);
+      const success = await userModel.updateUser(req.params.id, { username, password_hash, email });
+
       if (!success) {
         return res.status(404).json({ message: 'User not found' });
-      }      
+      }
+
       res.status(200).json({ message: 'User updated successfully' });
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
   },
 
-  // Delete a user by ID
   deleteUser: async (req, res) => {
-    try { const success = await userModel.deleteUser(req.params.id);
+    try {
+      const success = await userModel.deleteUser(req.params.id);
       if (!success) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -54,7 +71,7 @@ const userController = {
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
-  },
+  }
 };
 
 module.exports = userController;

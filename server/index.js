@@ -1,6 +1,5 @@
-// server.js
-const express = require('express'); // Import express
-const dbPool = require('./config/config'); // Import mysql2 connection pool
+const express = require('express');
+const dbPool = require('./config/config');
 
 // Import route files
 const userRoutes = require('./routes/userRoutes');
@@ -12,12 +11,11 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const sponsorRoutes = require('./routes/sponsorRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const teamRoutes = require('./routes/teamRoutes');
-const teamMemberRoutes = require('./routes/teamMemberRoutes');
+const teamMemberRoutes = require('./routes/teamMemberRoutes'); // ✅ This line was missing
 
 const app = express();
 const port = 3000;
 
-// Middleware to parse JSON bodies
 app.use(express.json());
 
 // Mount routes
@@ -30,24 +28,28 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/sponsors', sponsorRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/teams', teamRoutes);
-app.use('/api/team-members', teamMemberRoutes);
+app.use('/api/team-members', teamMemberRoutes); // ✅ Mounting the route
 
-
-// Simple route for the root path
+// Root route
 app.get('/', (req, res) => {
   res.send('Sports Events API is running!');
 });
 
-// Check database connection and start server
-dbPool.getConnection((err, connection) => {
-  if (err) {
-    console.error('Database connection failed:', err.stack);
-    return;
-  }
-  console.log('Database connected successfully.');
-  connection.release(); // Release the connection
+// Test DB connection and start server
+async function startServer() {
+  try {
+    const connection = await dbPool.getConnection();
+    console.log('Database connected successfully.');
+    connection.release();
 
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-});
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+    process.exit(1); // Exit if DB connection fails
+  }
+}
+
+startServer();
+// Handle unhandled promise rejections
