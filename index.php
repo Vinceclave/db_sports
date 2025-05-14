@@ -21,37 +21,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($username) || empty($password)) {
         $error_message = "Please enter both username and password.";
     } else {
+        // Database connection
         $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
-
         if (!$conn) {
             die("Connection failed: " . mysqli_connect_error());
         }
 
-        // Use prepared statement to prevent SQL injection
+        // Prepare statement to fetch user data by username
         $sql = "SELECT user_id, password_hash FROM Users WHERE username = ?";
         $stmt = mysqli_prepare($conn, $sql);
-        mysqli_stmt_bind_param($stmt, "s", $username);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
 
-        if ($result && mysqli_num_rows($result) === 1) {
-            $user = mysqli_fetch_assoc($result);
-            if (password_verify($password, $user['password_hash'])) {
-                $_SESSION['user_id'] = $user['user_id'];
-                header('Location: landing.php'); // Or your user dashboard page
-                exit();
+        if ($stmt) {
+            // Bind parameters and execute statement
+            mysqli_stmt_bind_param($stmt, "s", $username);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+
+            // Check if a user was found
+            if ($result && mysqli_num_rows($result) === 1) {
+                $user = mysqli_fetch_assoc($result);
+                // Verify the provided password against the stored hash
+                if (password_verify($password, $user['password_hash'])) {
+                    // Password is correct, start a session
+                    $_SESSION['user_id'] = $user['user_id'];
+                    // Redirect to landing page or user dashboard
+                    header('Location: landing.php');
+                    exit();
+                } else {
+                    $error_message = "Invalid username or password.";
+                }
             } else {
                 $error_message = "Invalid username or password.";
             }
+
+            // Close the statement
+            mysqli_stmt_close($stmt);
         } else {
-            $error_message = "Invalid username or password.";
+            // Error preparing statement
+            $error_message = "Database error. Please try again later.";
         }
 
+        // Close the database connection
         mysqli_close($conn);
     }
 }
-
-// Display login form (you'll need to add the HTML for your login form here)
 ?>
 
 <!DOCTYPE html>
