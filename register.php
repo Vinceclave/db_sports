@@ -1,5 +1,6 @@
 php
-<?php include 'includes/header.php';
+<?php
+include 'includes/header.php';
 require_once 'config.php';
 
 $error_message = '';
@@ -53,7 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         mysqli_stmt_close($check_stmt);
-        mysqli_close($conn);
     }
 }
 include 'includes/header.php';
