@@ -1,7 +1,5 @@
-php
 <?php
-include 'includes/header.php';
-require_once 'config.php';
+require_once 'config.php'; // Keep config.php inclusion
 
 $error_message = '';
 
@@ -57,7 +55,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 include 'includes/header.php';
-?>
 
 <main class="container mx-auto mt-8">
     <h2 class="text-2xl font-bold mb-4">User Registration</h2>
