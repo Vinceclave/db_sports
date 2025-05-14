@@ -9,14 +9,7 @@ const config = {
 
 	kit: {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		adapter: adapter(),
-		vite: {
-			server: {
-				proxy: {
-					'/api': 'http://localhost:3000'
-				}
-			}
-		}
+		adapter: adapter()
 	},
 };
 
