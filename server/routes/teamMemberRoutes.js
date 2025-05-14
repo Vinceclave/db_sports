@@ -9,12 +9,9 @@ router.get('/', teamMemberController.getAllTeamMembers);
 router.get('/:id', teamMemberController.getTeamMemberById);
 
 // Add a team member
-router.post('/', teamMemberController.createTeamMember);
-
-// Update a team member by ID
-router.put('/:id', teamMemberController.updateTeamMember);
+router.post('/', teamMemberController.addTeamMember);
 
 // Delete a team member by ID
-router.delete('/:id', teamMemberController.deleteTeamMember);
+router.delete('/:id', teamMemberController.removeTeamMember);
 
 module.exports = router;

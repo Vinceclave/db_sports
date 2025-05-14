@@ -1,5 +1,5 @@
 // server.js
-const express = require('express');
+const express = require('express'); // Import express
 const dbPool = require('./config/config'); // Import mysql2 connection pool
 
 // Import route files
