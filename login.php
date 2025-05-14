@@ -1,4 +1,3 @@
-php
 <?php
 session_start();
 require_once 'config.php';
@@ -6,25 +5,40 @@ require_once 'config.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
 
-    $conn = get_db_connection();    $stmt = $conn->prepare("SELECT user_id, password FROM Users WHERE username = ?");
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($user_id, $hashed_password);
-
-    if ($stmt->fetch() && password_verify($password, $hashed_password)) {
-        $_SESSION['user_id'] = $user_id;
-        header('Location: index.php');
-        exit;
+    // Input validation
+    if (empty($username) || empty($password)) {
+        $error = 'Please enter both username and password.';
     } else {
-        $error = 'Invalid username or password.';
-    }
+        $conn = get_db_connection();
+        
+        // Check for database connection error
+        if ($conn->connect_error) {
+            $error = "Database connection failed: " . $conn->connect_error;
+        } else {
+            $stmt = $conn->prepare("SELECT user_id, password_hash FROM Users WHERE username = ?");
+            if ($stmt === false) {
+                 $error = 'Database query error: ' . $conn->error;
+            } else {
+                $stmt->bind_param("s", $username);
+                $stmt->execute();
+                $stmt->store_result();
+                $stmt->bind_result($user_id, $hashed_password);
 
-    $stmt->close();
-    $conn->close();
+                if ($stmt->fetch() && password_verify($password, $hashed_password)) {
+                    $_SESSION['user_id'] = $user_id;
+                    header('Location: index.php');
+                    exit;
+                } else {
+                    $error = 'Invalid username or password.';
+                }
+                $stmt->close();
+            }
+            $conn->close();
+        }
+    }
 }
 ?>
 <!DOCTYPE html>

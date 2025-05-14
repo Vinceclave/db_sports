@@ -1,4 +1,3 @@
-php
 <?php
 require_once 'config.php';
 
@@ -10,9 +9,19 @@ if (!defined('DB_HOST') || !defined('DB_USERNAME') || !defined('DB_PASSWORD') ||
 $message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
+    // Basic input validation
+    if (empty($_POST['username']) || empty($_POST['email']) || empty($_POST['password'])) {
+ $message = "Please fill in all fields.";
+    } else {
+        $username = trim($_POST['username']);
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
+
+        // Hash the password
+        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+
+
+    // Get database connection
 
     $conn = get_db_connection();
 
@@ -25,15 +34,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($check_stmt->num_rows > 0) {
         $message = "Username or email already exists.";
     } else {
+        // Insert new user into the database
         $stmt = $conn->prepare("INSERT INTO Users (username, email, password_hash) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $username, $email, $password);
-
-        if ($stmt->execute()) {
-            $message = "Registration successful! You can now <a href='login.php'>login</a>.";
+        if ($stmt === false) {
+            $message = "Database error: Unable to prepare statement.";
         } else {
-            $message = "Error: " . $stmt->error;
+            $stmt->bind_param("sss", $username, $email, $password_hash);
+
+            if ($stmt->execute()) {
+                // Registration successful, redirect to login page
+                header("Location: login.php");
+                exit();
+            } else {
+                $message = "Error: " . $stmt->error;
+            }
         }
-        $stmt->close();
     }
     $check_stmt->close();
     $conn->close();
