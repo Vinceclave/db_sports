@@ -4,10 +4,18 @@ require_once 'config.php';
 
 session_start();
 
+// This file now serves as a landing page or redirects based on login status.
+// The login logic has been moved to login.php.
+
+// If the user is not logged in, redirect to the login page.
+if (!isset($_SESSION['user_id'])) {
+ header('Location: login.php');
+ exit();
+}
 // Redirect if already logged in
-if (isset($_SESSION['user_id'])) {
+if (isset($_SESSION['user_id'])) { 
     header('Location: landing.php'); // Or your user dashboard page
-    exit();
+ exit();
 }
 
 $error_message = '';
@@ -22,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "Please enter both username and password.";
     } else {
         // Database connection
-        $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
+ $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);
         if (!$conn) {
             die("Connection failed: " . mysqli_connect_error());
         }
@@ -30,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Prepare statement to fetch user data by username
         $sql = "SELECT user_id, password_hash FROM Users WHERE username = ?";
         $stmt = mysqli_prepare($conn, $sql);
-
+        
         if ($stmt) {
             // Bind parameters and execute statement
-            mysqli_stmt_bind_param($stmt, "s", $username);
+ mysqli_stmt_bind_param($stmt, "s", $username);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
 
@@ -42,9 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $user = mysqli_fetch_assoc($result);
                 // Verify the provided password against the stored hash
                 if (password_verify($password, $user['password_hash'])) {
-                    // Password is correct, start a session
+ // Password is correct, start a session
                     $_SESSION['user_id'] = $user['user_id'];
-                    // Redirect to landing page or user dashboard
+ // Redirect to landing page or user dashboard
                     header('Location: landing.php');
                     exit();
                 } else {
@@ -54,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error_message = "Invalid username or password.";
             }
 
-            // Close the statement
+ // Close the statement
             mysqli_stmt_close($stmt);
         } else {
             // Error preparing statement
@@ -62,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Close the database connection
-        mysqli_close($conn);
+ mysqli_close(conn);
     }
 }
 ?>
@@ -77,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <h2>Login</h2>
     <?php if (!empty($error_message)): ?>
-        <p style="color: red;"><?php echo $error_message; ?></p>
+ <p style="color: red;"><?php echo $error_message; ?></p>
     <?php endif; ?>
     <form action="index.php" method="post">
         <div>
