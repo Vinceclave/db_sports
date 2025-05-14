@@ -25,17 +25,18 @@ const userController = {
 
   createUser: async (req, res) => {
     try {
-      const { username, password, email } = req.body;
+      const { username, password, email, F_NAME, L_NAME, PHONE_NUM } = req.body;
 
-      if (!username || !password || !email) {
-        return res.status(400).json({ message: 'Username, password, and email are required' });
+      // Basic validation: check for required fields
+      if (!username || !password || !email || !F_NAME || !L_NAME || !PHONE_NUM) {
+        return res.status(400).json({ message: 'All fields are required for registration' });
       }
 
       const password_hash = await bcrypt.hash(password, 10);
-      const newUser = await userModel.createUser({ username, password_hash, email });
+      const newUser = await userModel.createUser({ username, password_hash, email, F_NAME, L_NAME, PHONE_NUM, ROLE: 'user' });
 
       res.status(201).json({ message: 'User created successfully', user: newUser });
-    } catch (err) {
+    } catch (err) { // Catch database errors or other issues
       res.status(400).json({ message: err.message });
     }
   },
